@@ -234,4 +234,4 @@ Ce projet est sous licence ISC. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - **Architecture** : Solutions scalables
 - **DevOps** : CI/CD et déploiement
 
-**Darna** - Révolutionner l'immobilier avec l'intelligence artificielle 🚀
+
