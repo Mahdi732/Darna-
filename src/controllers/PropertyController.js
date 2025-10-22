@@ -46,5 +46,22 @@ class PropertyController{
             }
         }
     };
+    deleteProperty = async (req, res) => {
+        try {
+            const PropertyModel = Property.getModel();
+            const propertyId = req.params.id;
+
+            const deleteProperty = await PropertyModel.findByIdAndDelete(propertyId);
+
+            if (!deleteProperty){
+                return res.status(404).json({error:'property not found'});
+            }
+
+            res.json({ message: 'property deleted succesfully'});
+        }catch(error){
+            console.error('error deleting the property', error);
+            res.status(500).json({ error:'internal server error'});
+        }
+    };
 }
 export default new PropertyController();

@@ -7,4 +7,6 @@ router.post('/', PropertyController.createProperty);
 
 router.put('/:id', PropertyController.updateProperty);
 
+router.delete('/:id',PropertyController.deleteProperty)
+
 export default router;
