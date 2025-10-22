@@ -20,5 +20,31 @@ class PropertyController{
             }
         }
     };
+
+    updateProperty = async (req, res)=> {
+        try {
+            const PropertyModel = Property.getModel();
+            const propertyId = req.params.id;
+
+            await propertySchema.validateAsync(req.body, {presence: 'optional'});
+            const updateProperty = await PropertyModel.findByIdAndUpdate(
+                propertyId,
+                req.body,
+                { new: true, runValidators: true}
+            );
+
+            if(!updateProperty){
+                return res.status(400).json({ error: 'proprety not found'});
+            }
+            res.json(updateProperty);
+        } catch(error){
+            if( error.isJoi){
+                res.status(400).json({error : error.details[0].message});
+            }else {
+                console.error('Error updating proprety:', error);
+                res.status(500).json({ error : 'internal server error'});
+            }
+        }
+    };
 }
 export default new PropertyController();
