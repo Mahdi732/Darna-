@@ -4,6 +4,8 @@ import verifyOwnership from '../middlewares/verifyOwnership.js';
 
 const router = express.Router();
 
+router.get('/search', PropertyController.searchPropreties);
+
 router.post('/', PropertyController.createproperty);
 
 router.put('/:id', PropertyController.updateProperty);
