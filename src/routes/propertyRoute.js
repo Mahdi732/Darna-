@@ -5,4 +5,6 @@ const router = express.Router();
 
 router.post('/', PropertyController.createProperty);
 
+router.put('/:id', PropertyController.updateProperty);
+
 export default router;
