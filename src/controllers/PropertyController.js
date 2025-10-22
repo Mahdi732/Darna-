@@ -1,15 +1,15 @@
 import Property from "../models/Property.js";
 
 class PropertyController{
-    createProprety = async(req, res)=>{
+    createproperty = async(req, res)=>{
         try {
             const PropertyModel =  Property.getModel();
-            const newProprety = new PropertyModel(req.body);
-            const savedProprety = await newProprety.save();
+            const newproperty = new PropertyModel(req.body);
+            const savedproperty = await newproperty.save();
             
-            res.status(201).json(savedProprety);
+            res.status(201).json(savedproperty);
         }catch(error){
-            console.error('Error creating proprety:', error);
+            console.error('Error creating property:', error);
             res.status(500).json({error: 'internal server error'});
         }
     };
