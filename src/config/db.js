@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export default class DataBase {
+export class DataBase {
     #uri;
 
     constructor (uri) {
@@ -10,7 +10,7 @@ export default class DataBase {
     async connect () {
         try {
             await mongoose.connect(this.#uri);
-            console.log('Connection Successful');
+            console.log('Connection Successful with mongoDB');
         }catch (e) {
             console.error("error while connecting \n", e);
         }

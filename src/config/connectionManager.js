@@ -1,4 +1,4 @@
-import DataBase from "./db.js";
+import { DataBase } from "./db.js";
 
 export class ConnectionManager {
     #db;
