@@ -72,14 +72,12 @@ class AuthService {
 
             await user.save();
 
-            // Envoyer l'email de vérification (désactivé pour le développement)
+            // Envoyer l'email de vérification
             try {
                 await this.emailService.sendVerificationEmail(email, emailVerificationToken);
             } catch (emailError) {
-                console.warn('⚠️ Email verification disabled for development:', emailError.message);
-                // Marquer l'email comme vérifié pour le développement
-                user.emailVerified = true;
-                await user.save();
+                console.warn('⚠️ Email verification service error:', emailError.message);
+                // L'email reste non vérifié jusqu'à ce que l'utilisateur clique sur le lien
             }
 
             return {
@@ -118,8 +116,8 @@ class AuthService {
                 throw new Error('Email ou mot de passe incorrect');
             }
 
-            // Vérifier si l'email est vérifié (désactivé pour le développement)
-            if (!user.emailVerified && process.env.NODE_ENV === 'production') {
+            // Vérifier si l'email est vérifié (obligatoire pour tous les environnements)
+            if (!user.emailVerified) {
                 throw new Error('Veuillez vérifier votre email avant de vous connecter');
             }
 
