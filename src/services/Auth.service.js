@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import EmailService from './EmailService.js';
+import TwoFactorService from './TwoFactorService.js';
 
 class AuthService {
     constructor() {
@@ -9,6 +10,7 @@ class AuthService {
         this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
         this.refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
         this.emailService = new EmailService();
+        this.twoFactorService = new TwoFactorService();
         
         if (!this.jwtSecret) {
             throw new Error('JWT_SECRET is not defined in environment variables');
@@ -355,6 +357,142 @@ class AuthService {
 
         } catch (error) {
             throw new Error(`Erreur lors de la mise à jour: ${error.message}`);
+        }
+    }
+
+    // ===== 2FA =====
+
+    // Générer le setup 2FA
+    async generate2FASetup(userId) {
+        try {
+            const user = await User.findById(userId);
+            if (!user) throw new Error('Utilisateur non trouvé');
+            if (user.twoFactorEnabled) throw new Error('La 2FA est déjà activée');
+
+            const { secret } = this.twoFactorService.generateSecret(user.email);
+            const qrCodeDataURL = await this.twoFactorService.generateQRCode(secret, user.email);
+            const backupCodes = this.twoFactorService.generateBackupCodes();
+
+            user.twoFactorSecret = secret;
+            user.twoFactorBackupCodes = backupCodes;
+            await user.save();
+
+            return {
+                success: true,
+                secret,
+                qrCodeDataURL,
+                backupCodes,
+                message: 'Scannez le QR Code avec Google Authenticator'
+            };
+
+        } catch (error) {
+            throw new Error(`Erreur setup 2FA: ${error.message}`);
+        }
+    }
+
+    // Activer la 2FA
+    async enable2FA(userId, token) {
+        try {
+            const user = await User.findById(userId);
+            if (!user) throw new Error('Utilisateur non trouvé');
+            if (user.twoFactorEnabled) throw new Error('La 2FA est déjà activée');
+
+            const isValidToken = this.twoFactorService.verifyToken(user.twoFactorSecret, token);
+            if (!isValidToken) {
+                const isValidBackupCode = this.twoFactorService.verifyBackupCode(
+                    user.twoFactorBackupCodes || [],
+                    user.twoFactorBackupCodesUsed || [],
+                    token
+                );
+                if (!isValidBackupCode) {
+                    throw new Error('Code invalide - utilisez le code de votre application d\'authentification ou un code de sauvegarde');
+                }
+            }
+
+            user.twoFactorEnabled = true;
+            await user.save();
+
+            return {
+                success: true,
+                message: '2FA activée avec succès',
+                backupCodes: user.twoFactorBackupCodes
+            };
+
+        } catch (error) {
+            throw new Error(`Erreur activation 2FA: ${error.message}`);
+        }
+    }
+
+    // Désactiver la 2FA
+    async disable2FA(userId, password) {
+        try {
+            const user = await User.findById(userId).select('+password');
+            if (!user) throw new Error('Utilisateur non trouvé');
+            if (!user.twoFactorEnabled) throw new Error('La 2FA n\'est pas activée');
+
+            const isPasswordValid = await user.comparePassword(password);
+            if (!isPasswordValid) throw new Error('Mot de passe incorrect');
+
+            // Désactiver la 2FA
+            user.twoFactorEnabled = false;
+            user.twoFactorSecret = undefined;
+            user.twoFactorBackupCodes = [];
+            user.twoFactorBackupCodesUsed = [];
+            await user.save();
+
+            return {
+                success: true,
+                message: '2FA désactivée avec succès'
+            };
+
+        } catch (error) {
+            throw new Error(`Erreur désactivation 2FA: ${error.message}`);
+        }
+    }
+
+    // Vérifier le code 2FA
+    async verify2FAForLogin(userId, token) {
+        try {
+            const user = await User.findById(userId);
+            if (!user) throw new Error('Utilisateur non trouvé');
+            if (!user.twoFactorEnabled) throw new Error('La 2FA n\'est pas activée');
+            const isValidToken = this.twoFactorService.verifyToken(user.twoFactorSecret, token);
+            if (isValidToken) {
+                return { success: true, message: 'Code 2FA vérifié' };
+            }
+            const isValidBackupCode = this.twoFactorService.verifyBackupCode(
+                user.twoFactorBackupCodes,
+                user.twoFactorBackupCodesUsed,
+                token
+            );
+
+            if (isValidBackupCode) {
+                user.twoFactorBackupCodesUsed.push(token);
+                await user.save();
+                return { success: true, message: 'Code de sauvegarde utilisé' };
+            }
+
+            throw new Error('Code invalide');
+
+        } catch (error) {
+            throw new Error(`Erreur vérification 2FA: ${error.message}`);
+        }
+    }
+
+    // Obtenir le statut 2FA
+    async get2FAStatus(userId) {
+        try {
+            const user = await User.findById(userId);
+            if (!user) throw new Error('Utilisateur non trouvé');
+
+            return {
+                success: true,
+                twoFactorEnabled: user.twoFactorEnabled,
+                backupCodesCount: user.twoFactorBackupCodes?.length || 0
+            };
+
+        } catch (error) {
+            throw new Error(`Erreur statut 2FA: ${error.message}`);
         }
     }
 }
