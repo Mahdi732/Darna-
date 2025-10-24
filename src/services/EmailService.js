@@ -44,7 +44,7 @@ class EmailService {
                 return;
             }
 
-            const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+            const verificationUrl = `${process.env.API_URL || 'http://localhost:5000'}/api/auth/verify-email?token=${token}`;
             
             const mailOptions = {
                 from: process.env.SMTP_FROM || 'noreply@darna.com',
@@ -89,7 +89,7 @@ class EmailService {
                 return;
             }
 
-            const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+            const resetUrl = `${process.env.API_URL || 'http://localhost:5000'}/api/auth/reset-password?token=${token}`;
             
             const mailOptions = {
                 from: process.env.SMTP_FROM || 'noreply@darna.com',

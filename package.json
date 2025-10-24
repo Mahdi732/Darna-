@@ -10,7 +10,14 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
-  "keywords": ["immobilier", "annonces", "chat", "estimation", "nodejs", "express"],
+  "keywords": [
+    "immobilier",
+    "annonces",
+    "chat",
+    "estimation",
+    "nodejs",
+    "express"
+  ],
   "author": "Darna Team",
   "license": "ISC",
   "type": "module",
@@ -27,8 +34,10 @@
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.9",
+    "qrcode": "^1.5.4",
     "sharp": "^0.34.4",
     "socket.io": "^4.8.1",
+    "speakeasy": "^2.0.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

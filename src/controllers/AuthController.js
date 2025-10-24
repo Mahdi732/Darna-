@@ -140,6 +140,66 @@ class AuthController {
             res.status(401).json({ success: false, message: 'Non authentifié' });
         }
     };
+
+    // ===== 2FA =====
+
+    // Générer le setup 2FA
+    generate2FASetup = async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const result = await this.authService.generate2FASetup(userId);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    };
+
+    // Activer la 2FA
+    enable2FA = async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const { token } = req.body;
+            const result = await this.authService.enable2FA(userId, token);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    };
+
+    // Désactiver la 2FA
+    disable2FA = async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const { password } = req.body;
+            const result = await this.authService.disable2FA(userId, password);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    };
+
+    // Vérifier le code 2FA
+    verify2FA = async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const { token } = req.body;
+            const result = await this.authService.verify2FAForLogin(userId, token);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    };
+
+    // Obtenir le statut 2FA
+    get2FAStatus = async (req, res) => {
+        try {
+            const userId = req.user?.userId;
+            const result = await this.authService.get2FAStatus(userId);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    };
 }
 
 export default AuthController;
