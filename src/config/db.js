@@ -1,27 +1,20 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-export class DataBase {
-    #uri;
-
-    constructor (uri) {
-        this.#uri = uri;
-    }
-
-    async connect () {
+class DatabaseConfig {
+    async connect() {
         try {
-            await mongoose.connect(this.#uri);
-            console.log('Connection Successful with mongoDB');
-        }catch (e) {
-            console.error("error while connecting \n", e);
+            await mongoose.connect('mongodb://127.0.0.1:27017/darna');
+            console.log('MongoDB connected successfully');
+        } catch (error) {
+            console.error('MongoDB connection error:', error.message);
+            throw error;
         }
     }
 
-    async disconnect () {
-        try {
-            await mongoose.disconnect();
-            console.log('MongoDB disconnected');
-        }catch (e) {
-            console.error(`disconnection error: \n`, e);
-        }
+    async disconnect() {
+        await mongoose.disconnect();
+        console.log('MongoDB disconnected');
     }
 }
+
+export default new DatabaseConfig();
