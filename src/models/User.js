@@ -30,6 +30,12 @@ const userSchema = new mongoose.Schema({
     emailVerificationExpires: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    
+    //2FA
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: String,
+    twoFactorBackupCodes: [String],
+    twoFactorBackupCodesUsed: [String],
     preferences: {
         notifications: {
             email: { type: Boolean, default: true },
