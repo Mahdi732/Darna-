@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import passport from 'passport';
+import session from 'express-session';
 import dbConfig from './config/db.js';
 import authRoutes from './routes/authRoute.js';
 
@@ -24,6 +26,29 @@ class App {
         
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        
+        // Sessions pour Passport
+        this.app.use(session({
+            secret: process.env.SESSION_SECRET || 'darna-session-secret',
+            resave: false,
+            saveUninitialized: false
+        }));
+        
+        // Passport
+        this.app.use(passport.initialize());
+        this.app.use(passport.session());
+        
+        // Sérialisation Passport
+        passport.serializeUser((user, done) => done(null, user._id));
+        passport.deserializeUser(async (id, done) => {
+            try {
+                const User = (await import('./models/User.js')).default;
+                const user = await User.findById(id);
+                done(null, user);
+            } catch (error) {
+                done(error, null);
+            }
+        });
         
         this.app.use((req, res, next) => {
             console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
