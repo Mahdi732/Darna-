@@ -1,5 +1,6 @@
 import express from 'express';
 import AuthController from '../controllers/AuthController.js';
+import SSOService from '../services/SSO.service.js';
 import { validateRequest } from '../middlewares/validatorMiddleware.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 import {
@@ -14,6 +15,9 @@ import {
 
 const router = express.Router();
 const authController = new AuthController();
+const ssoService = new SSOService();
+
+ssoService.configurePassport();
 
 // Routes publiques
 router.post('/register', validateRequest(registerSchema), authController.register);
@@ -30,6 +34,10 @@ router.get('/profile', authenticateToken, authController.getProfile);
 router.put('/profile', authenticateToken, validateRequest(updateProfileSchema), authController.updateProfile);
 router.get('/check', authenticateToken, authController.checkAuth);
 router.get('/me', authenticateToken, authController.getProfile);
+
+// Routes SSO
+router.get('/google', ssoService.authenticateGoogle());
+router.get('/google/callback', ssoService.authenticateGoogleCallback(), ssoService.handleSSOSuccess.bind(ssoService));
 
 // Routes 2FA
 router.get('/2fa/status', authenticateToken, authController.get2FAStatus);

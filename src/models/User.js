@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: function() { return !this.sso?.googleId; }, minlength: 6, select: false },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     phone: { type: String, trim: true },
@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema({
     emailVerificationExpires: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    
+    sso: {
+        googleId: String,
+        provider: { type: String, enum: ['google'] }
+    },
     
     //2FA
     twoFactorEnabled: { type: Boolean, default: false },
@@ -70,9 +75,9 @@ userSchema.virtual('isSubscriptionValid').get(function() {
     return new Date() < this.subscription.endDate;
 });
 
-// Hash du mot de passe
+// Hash du mot de passe si il est fourni
 userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
+    if (!this.isModified('password') || !this.password) return next();
     try {
         const salt = await bcrypt.genSalt(12);
         this.password = await bcrypt.hash(this.password, salt);
@@ -84,6 +89,7 @@ userSchema.pre('save', async function(next) {
 
 // Comparer les mots de passe
 userSchema.methods.comparePassword = async function(candidatePassword) {
+    if (!this.password) return false;
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
