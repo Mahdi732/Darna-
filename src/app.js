@@ -5,6 +5,7 @@ import passport from 'passport';
 import session from 'express-session';
 import dbConfig from './config/db.js';
 import authRoutes from './routes/authRoute.js';
+import subscriptionRoutes from './routes/subscriptionRoute.js';
 
 dotenv.config();
 
@@ -63,6 +64,7 @@ class App {
         });
 
         this.app.use('/api/auth', authRoutes);
+        this.app.use('/api/subscriptions', subscriptionRoutes);
 
         this.app.use((req, res) => {
             res.status(404).json({ success: false, message: 'Route non trouvée' });
@@ -116,9 +118,7 @@ class App {
                 console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
                 console.log(`URL: http://localhost:${this.port}`);
             });
-
-            process.on('SIGINT', this.shutdown.bind(this));
-            process.on('SIGTERM', this.shutdown.bind(this));
+           
 
         } catch (error) {
             console.error('Erreur démarrage:', error);
@@ -126,18 +126,7 @@ class App {
         }
     }
 
-    // Arrêt du serveur
-    async shutdown() {
-        console.log(' Arrêt du serveur...');
-        try {
-            await dbConfig.disconnect();
-            console.log(' Serveur arrêté');
-            process.exit(0);
-        } catch (error) {
-            console.error(' Erreur arrêt:', error);
-            process.exit(1);
-        }
-    }
+
 
     getApp() {
         return this.app;
