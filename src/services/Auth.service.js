@@ -45,18 +45,13 @@ class AuthService {
     async register(userData) {
         try {
             const { email, password, firstName, lastName, phone, accountType, companyInfo } = userData;
-
-            // Vérifier si l'utilisateur existe déjà
             const existingUser = await User.findOne({ email });
             if (existingUser) {
                 throw new Error('Un utilisateur avec cet email existe déjà');
             }
-
-            // Créer le token de vérification d'email
             const emailVerificationToken = this.generateRandomToken();
             const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
 
-            // Créer le nouvel utilisateur
             const user = new User({
                 email,
                 password,
@@ -71,13 +66,10 @@ class AuthService {
             });
 
             await user.save();
-
-            // Envoyer l'email de vérification
             try {
                 await this.emailService.sendVerificationEmail(email, emailVerificationToken);
             } catch (emailError) {
-                console.warn('⚠️ Email verification service error:', emailError.message);
-                // L'email reste non vérifié jusqu'à ce que l'utilisateur clique sur le lien
+                console.warn(' Email verification service error:', emailError.message);
             }
 
             return {
@@ -94,14 +86,11 @@ class AuthService {
     // Connexion
     async login(email, password) {
         try {
-            // Trouver l'utilisateur avec le mot de passe
             const user = await User.findOne({ email }).select('+password');
             
             if (!user) {
                 throw new Error('Email ou mot de passe incorrect');
             }
-
-            // Vérifier si le compte est actif
             if (!user.isActive) {
                 throw new Error('Votre compte a été désactivé');
             }
@@ -109,24 +98,17 @@ class AuthService {
             if (user.isBlocked) {
                 throw new Error(`Votre compte a été bloqué: ${user.blockedReason}`);
             }
-
-            // Vérifier le mot de passe
             const isPasswordValid = await user.comparePassword(password);
             if (!isPasswordValid) {
                 throw new Error('Email ou mot de passe incorrect');
             }
-
-            // Vérifier si l'email est vérifié (obligatoire pour tous les environnements)
             if (!user.emailVerified) {
                 throw new Error('Veuillez vérifier votre email avant de vous connecter');
             }
-
-            // Mettre à jour les statistiques de connexion
             user.stats.lastLogin = new Date();
             user.stats.loginCount += 1;
             await user.save();
 
-            // Générer les tokens
             const tokenPayload = {
                 userId: user._id,
                 email: user.email,
@@ -213,7 +195,6 @@ class AuthService {
             const user = await User.findOne({ email });
             
             if (!user) {
-                // Ne pas révéler si l'email existe ou non
                 return {
                     success: true,
                     message: 'Si cet email existe, vous recevrez un lien de réinitialisation'
@@ -224,12 +205,10 @@ class AuthService {
             user.passwordResetToken = resetToken;
             user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1h
             await user.save();
-
-            // Envoyer l'email de réinitialisation
             try {
                 await this.emailService.sendPasswordResetEmail(email, resetToken);
             } catch (emailError) {
-                console.warn('⚠️ Email reset disabled for development:', emailError.message);
+                console.warn('Email reset disabled for development:', emailError.message);
             }
 
             return {
@@ -299,7 +278,6 @@ class AuthService {
     // Déconnexion
     async logout(userId) {
         try {
-            // Dans une vraie application, on pourrait ajouter le token à une blacklist
             return {
                 success: true,
                 message: 'Déconnexion réussie'
@@ -309,7 +287,6 @@ class AuthService {
         }
     }
 
-    // Obtenir le profil utilisateur
     async getUserProfile(userId) {
         try {
             const user = await User.findById(userId);
@@ -336,8 +313,6 @@ class AuthService {
             if (!user) {
                 throw new Error('Utilisateur non trouvé');
             }
-
-            // Mettre à jour les champs autorisés
             const allowedFields = ['firstName', 'lastName', 'phone', 'preferences', 'companyInfo'];
             allowedFields.forEach(field => {
                 if (updateData[field] !== undefined) {
@@ -360,7 +335,6 @@ class AuthService {
 
     // ===== 2FA =====
 
-    // Générer le setup 2FA
     async generate2FASetup(userId) {
         try {
             const user = await User.findById(userId);
@@ -430,8 +404,6 @@ class AuthService {
 
             const isPasswordValid = await user.comparePassword(password);
             if (!isPasswordValid) throw new Error('Mot de passe incorrect');
-
-            // Désactiver la 2FA
             user.twoFactorEnabled = false;
             user.twoFactorSecret = undefined;
             user.twoFactorBackupCodes = [];
