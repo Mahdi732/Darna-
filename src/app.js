@@ -105,6 +105,7 @@ class App {
                 success: false,
                 message: error.message || 'Erreur interne du serveur'
                 
+
             });
         });
     }
