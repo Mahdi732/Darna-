@@ -105,11 +105,6 @@ MINIO_PORT=9000
 MINIO_ACCESS_KEY=your-access-key
 MINIO_SECRET_KEY=your-secret-key
 
-# Keycloak
-KEYCLOAK_URL=http://localhost:8080
-KEYCLOAK_REALM=darna
-KEYCLOAK_CLIENT_ID=darna-api
-
 # Email
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
