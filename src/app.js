@@ -104,6 +104,8 @@ class App {
             res.status(error.status || 500).json({
                 success: false,
                 message: error.message || 'Erreur interne du serveur'
+                
+
             });
         });
     }

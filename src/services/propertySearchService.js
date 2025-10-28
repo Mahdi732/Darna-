@@ -15,7 +15,7 @@ const searchPropreties = async function name(filters) {
     bathrooms,
     amenities,
     status = 'published',
-    sort = 'createdAt',
+    sort = 'priority', 
     order = 'desc',
     page = 1,
     limit = 10
@@ -49,9 +49,8 @@ const searchPropreties = async function name(filters) {
   if(bathrooms){
     searchQuery.bathrooms = { $gte: Number(bathrooms)};
   }
-  if(location && radius) {
-    const [longitude, latitude] = location.split(',').map(Number);
-    searchQuery.amenilities = { $in : amenitiesArray};
+  if(amenities && amenities.length > 0) {
+    searchQuery.amenities = { $in : amenities};
   }
   if (location && radius) {
     const [longitude, latitude] = location.split(',').map(Number);
@@ -68,8 +67,20 @@ const searchPropreties = async function name(filters) {
 
   const skip = (Number(page) - 1) * Number(limit);
   const sortOrder = order === 'asc' ? 1 : -1;
+  
+  let sortCriteria;
+  if (sort === 'priority') {
+    sortCriteria = { 'ownerId.subscription.priority': -1 };
+  } else {
+    sortCriteria = {
+      'ownerId.subscription.priority': -1,
+      [sort]: sortOrder
+    };
+  }
+  
   const properties = await PropertyModel.find(searchQuery)
-      .sort({ [sort]: sortOrder })
+      .populate('ownerId', 'subscription')
+      .sort(sortCriteria)
       .skip(skip)
       .limit(Number(limit));
 
