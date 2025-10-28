@@ -1,5 +1,6 @@
 import propertySchema from "../../validation/propertyValidation.js";
 import Property from "../models/Property.js";
+import searchPropreties from "../services/propertySearchService.js";
 
 class PropertyController{
     createproperty = async(req, res)=>{
@@ -64,78 +65,10 @@ class PropertyController{
     };
     searchPropreties = async(req, res) => {
         try{
-            const PropertyModel = Property.getModel();
-            const {
-                keyword,
-                location,
-                radius,
-                minPrice,
-                maxPrice,
-                transactionType,
-                minSurface,
-                maxSurface,
-                rooms,
-                bathrooms,
-                amenities,
-                status = 'published'
-            } = req.query;
-
-            let searchQuery = {status};
-
-            if(keyword){
-                searchQuery.$or = [
-                    { title : { $refex: keyword, $options : 'i'} },
-                    {description : {$regex: keyword , $options: 'i'} }
-                ];
-            }
-            if(transactionType){
-                searchQuery.transactionType = transactionType;
-            }
-            if(minPrice || maxPrice){
-                if(minPrice) searchQuery.price.$gte = Number(minPrice);
-                if(maxPrice) searchQuery.price.$lte = Number(maxPrice);
-            }
-
-            if(minSurface || maxSurface){
-                searchQuery.surface = {};
-                if(minSurface) searchQuery.maxSurface.$gte = Number(minSurface);
-                if(maxSurface) searchQuery.minSurface.lte =Number(maxSurface);
-            }
-            if (rooms) {
-        searchQuery.rooms = { $gte: Number(rooms) };
-      }
-
-      if (bathrooms) {
-        searchQuery.bathrooms = { $gte: Number(bathrooms) };
-      }
-
-      if (amenities) {
-        const amenitiesArray = amenities.split(',');
-        searchQuery.amenities = { $in: amenitiesArray };
-      }
-
-      if (location && radius) {
-        const [longitude, latitude] = location.split(',').map(Number);
-        searchQuery.location = {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: [longitude, latitude]
-            },
-            $maxDistance: radius * 1000
-          }
-        };
-      }
-
-      const propreties = await PropertyModel.find(searchQuery);
-
-      res.json({
-        count: propreties.length,
-        propreties
-      });
-        }catch(error){
-            console.error('Error searching properties:',error);
-            res.status(500).json({ error:'internal server error'});
+            const result = await searchPropretiesService(req.query);
+            res.json(result);
+        }catch(error){console.error('Error searching properties', error);
+            res.status(500).json({error :'internal server error'});
         }
     };
 }
