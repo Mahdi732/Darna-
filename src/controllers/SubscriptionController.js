@@ -31,6 +31,16 @@ class SubscriptionController {
             res.status(500).json({ success: false, message: error.message });
         }
     };
+
+    createStripeSession = async (req, res) => {
+        try {
+            const { planId } = req.body;
+            const url = await this.subscriptionService.createStripeSession(req.user.userId, planId);
+            res.json({ success: true, url });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    }
 }
 
 export default SubscriptionController;

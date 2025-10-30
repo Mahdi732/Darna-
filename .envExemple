@@ -20,10 +20,11 @@ SMTP_PASS=et ça
 SMTP_FROM=noreply@darna.com
 
 # Configuration client
-CLIENT_URL=http://localhost:3000
-
+CLIENT_URL=http://localhost:5000
+ 
 
 GOOGLE_CLIENT_ID=remplis ça
 GOOGLE_CLIENT_SECRET=et ça
 
-
+STRIPE_SECRET_KEY=remplie ça
+STRIPE_PUBLISHABLE_KEY=remplie ça
