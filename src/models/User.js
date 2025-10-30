@@ -56,7 +56,9 @@ const userSchema = new mongoose.Schema({
     },
     isActive: { type: Boolean, default: true },
     isBlocked: { type: Boolean, default: false },
-    blockedReason: String
+    blockedReason: String,
+    parentCompany: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
