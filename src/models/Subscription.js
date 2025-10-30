@@ -8,7 +8,7 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true
     },
     status: {
-        type: String, enum: ['active', 'cancelled', 'expired'], default: 'active'
+        type: String, enum: ['active', 'cancelled', 'expired', 'pending_renewal'], default: 'active'
     },
     startDate: {
         type: Date, default: Date.now
@@ -18,7 +18,11 @@ const subscriptionSchema = new mongoose.Schema({
     },
     autoRenew: {
         type: Boolean, default: true
-    }
+    },
+    renewalAttempts: { type: Number, default: 0 },
+    lastRenewalAt: { type: Date },
+    lastRenewalError: { type: String },
+    renewalSessionUrl: { type: String }
 }, {
     timestamps: true
 });

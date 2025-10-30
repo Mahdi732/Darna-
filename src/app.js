@@ -134,6 +134,20 @@ class App {
                 console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
                 console.log(`URL: http://localhost:${this.port}`);
             });
+            const { default: SubscriptionService } = await import('./services/SubscriptionService.js');
+            const subService = new SubscriptionService();
+            const runJob = async () => {
+                try {
+                    const result = await subService.processExpiredSubscriptions();
+                    if (result?.processed >= 0) {
+                        console.log(`[SubscriptionsJob] processed=${result.processed} @ ${new Date().toISOString()}`);
+                    }
+                } catch (e) {
+                    console.error('[SubscriptionsJob] error:', e.message);
+                }
+            };
+            runJob();
+            setInterval(runJob, 60 * 60 * 1000);
            
 
         } catch (error) {
