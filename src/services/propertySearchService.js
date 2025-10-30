@@ -79,8 +79,12 @@ const searchPropreties = async function name(filters) {
   }
   
   const properties = await PropertyModel.find(searchQuery)
-      .populate('ownerId', 'subscription')
-      .sort(sortCriteria)
+      .populate({
+        path: 'ownerId',
+        select: 'subscription',
+        populate: { path: 'subscription.plan', select: 'priority' }
+      })
+      .sort({ 'ownerId.subscription.plan.priority': -1 })
       .skip(skip)
       .limit(Number(limit));
 
