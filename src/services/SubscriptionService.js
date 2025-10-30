@@ -1,7 +1,7 @@
+import User from '../models/User.js';
 import Subscription from '../models/Subscription.js';
 import Plan from '../models/Plan.js';
 import Stripe from 'stripe';
-import User from '../models/User.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 class SubscriptionService {
@@ -38,6 +38,7 @@ class SubscriptionService {
     async createStripeSession(userId, planId) {
         const plan = await Plan.findById(planId);
         if (!plan) throw new Error('Plan non trouvé');
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -57,6 +58,34 @@ class SubscriptionService {
             metadata: { userId: userId, planId: planId },
         });
         return session.url;
+    }
+
+    async processExpiredSubscriptions() {
+        const now = new Date();
+        const expiring = await Subscription.find({ status: 'active', endDate: { $lte: now } });
+        for (const sub of expiring) {
+            if (sub.autoRenew) {
+                try {
+                    const url = await this.createStripeSession(sub.user, sub.plan.toString());
+                    sub.status = 'pending_renewal';
+                    sub.renewalAttempts = (sub.renewalAttempts || 0) + 1;
+                    sub.lastRenewalAt = new Date();
+                    sub.lastRenewalError = undefined;
+                    sub.renewalSessionUrl = url;
+                    await sub.save();
+                } catch (err) {
+                    sub.status = 'expired';
+                    sub.renewalAttempts = (sub.renewalAttempts || 0) + 1;
+                    sub.lastRenewalAt = new Date();
+                    sub.lastRenewalError = err.message;
+                    await sub.save();
+                }
+            } else {
+                sub.status = 'expired';
+                await sub.save();
+            }
+        }
+        return { processed: expiring.length };
     }
 }
 

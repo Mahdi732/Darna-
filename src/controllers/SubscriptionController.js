@@ -41,6 +41,15 @@ class SubscriptionController {
             res.status(400).json({ success: false, message: error.message });
         }
     }
+
+    runCronNow = async (req, res) => {
+        try {
+            const result = await this.subscriptionService.processExpiredSubscriptions();
+            res.json({ success: true, result });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }
 
 export default SubscriptionController;

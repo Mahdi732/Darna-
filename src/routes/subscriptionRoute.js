@@ -17,5 +17,6 @@ router.post('/subscribe', authenticateToken, subscriptionController.subscribe);
 router.get('/my-subscription', authenticateToken, subscriptionController.getMySubscription);
 router.delete('/cancel', authenticateToken, subscriptionController.cancelSubscription);
 router.post('/stripe-session', authenticateToken, subscriptionController.createStripeSession);
+router.post('/cron/run', authenticateToken, subscriptionController.runCronNow);
 
 export default router;
