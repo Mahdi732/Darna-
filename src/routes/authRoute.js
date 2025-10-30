@@ -34,6 +34,8 @@ router.get('/profile', authenticateToken, authController.getProfile);
 router.put('/profile', authenticateToken, validateRequest(updateProfileSchema), authController.updateProfile);
 router.get('/check', authenticateToken, authController.checkAuth);
 router.get('/me', authenticateToken, authController.getProfile);
+router.post('/add-member', authenticateToken, authController.addMember);
+router.post('/remove-member', authenticateToken, authController.removeMember);
 
 // Routes SSO
 router.get('/google', ssoService.authenticateGoogle());
