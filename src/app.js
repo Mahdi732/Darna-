@@ -66,6 +66,20 @@ class App {
         this.app.use('/api/auth', authRoutes);
         this.app.use('/api/subscriptions', subscriptionRoutes);
 
+        this.app.get('/abo/success', (req, res) => {
+            res.send(`
+                <h1>Paiement Stripe réussi !</h1>
+                <p>Merci pour votre achat. Votre abonnement sera activé sous peu.</p>
+                <code>Session Stripe : ${req.query.session_id || '-'} </code>
+            `);
+        });
+        this.app.get('/abo/cancel', (req, res) => {
+            res.send(`
+                <h1>Paiement annulé</h1>
+                <p>Vous n'avez pas finalisé votre achat.</p>
+            `);
+        });
+
         this.app.use((req, res) => {
             res.status(404).json({ success: false, message: 'Route non trouvée' });
         });
