@@ -1,6 +1,7 @@
 import express from "express";
 import http from "http";
-import { chat } from "./socket/chat.socket";
+import { Chat } from "./socket/chat.socket.js";
+import { NotificationSocket } from "./socket/Notification.socket.js";
 import { Server } from "socket.io";
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -124,7 +125,10 @@ class App {
                 }
             });
             this.app.set("io", io);
-            chat(io);
+            const chatSocket = new Chat(io);
+            chatSocket.init();
+            const notifSocket = new NotificationSocket(io);
+            notifSocket.init();
 
             server.listen(this.port, () => {
                 console.log(`Serveur démarré sur le port ${this.port}`);

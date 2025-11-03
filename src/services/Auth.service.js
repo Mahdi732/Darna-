@@ -129,6 +129,7 @@ class AuthService {
             // Générer les tokens
             const tokenPayload = {
                 userId: user._id,
+                name: user.firstName + " " + user.lastName,
                 email: user.email,
                 role: user.role,
                 accountType: user.accountType
