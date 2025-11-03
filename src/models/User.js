@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
         lastLogin: Date,
         loginCount: { type: Number, default: 0 }
     },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     blockedReason: String,
     parentCompany: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

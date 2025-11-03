@@ -1,4 +1,8 @@
-import express from 'express';
+import express from "express";
+import http from "http";
+import { Chat } from "./socket/chat.socket.js";
+import { NotificationSocket } from "./socket/Notification.socket.js";
+import { Server } from "socket.io";
 import cors from 'cors';
 import dotenv from 'dotenv';
 import passport from 'passport';
@@ -16,9 +20,10 @@ class App {
         this.setupMiddlewares();
         this.setupRoutes();
         this.setupErrorHandling();
-    }
+}
 
-    // Configuration des middlewares
+// Socket.io will be initialized when the server starts
+// Configuration des middlewares
     setupMiddlewares() {
         this.app.use(cors({
             origin: process.env.CLIENT_URL || 'http://localhost:3000',
@@ -129,7 +134,21 @@ class App {
         try {
             await dbConfig.connect();
             
-            this.app.listen(this.port, () => {
+            // create HTTP server and attach Socket.IO
+            const server = http.createServer(this.app);
+            const io = new Server(server, {
+                cors: {
+                    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+                    credentials: true
+                }
+            });
+            this.app.set("io", io);
+            const chatSocket = new Chat(io);
+            chatSocket.init();
+            const notifSocket = new NotificationSocket(io);
+            notifSocket.init();
+
+            server.listen(this.port, () => {
                 console.log(`Serveur démarré sur le port ${this.port}`);
                 console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
                 console.log(`URL: http://localhost:${this.port}`);
@@ -152,6 +171,17 @@ class App {
 
         } catch (error) {
             console.error('Erreur démarrage:', error);
+            process.exit(1);
+        }
+    }
+    async shutdown() {
+        console.log(' Arrêt du serveur...');
+        try {
+            await dbConfig.disconnect();
+            console.log(' Serveur arrêté');
+            process.exit(0);
+        } catch (error) {
+            console.error(' Erreur arrêt:', error);
             process.exit(1);
         }
     }
