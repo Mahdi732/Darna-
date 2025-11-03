@@ -9,6 +9,7 @@ import passport from 'passport';
 import session from 'express-session';
 import dbConfig from './config/db.js';
 import authRoutes from './routes/authRoute.js';
+import subscriptionRoutes from './routes/subscriptionRoute.js';
 
 dotenv.config();
 
@@ -68,6 +69,21 @@ class App {
         });
 
         this.app.use('/api/auth', authRoutes);
+        this.app.use('/api/subscriptions', subscriptionRoutes);
+
+        this.app.get('/abo/success', (req, res) => {
+            res.send(`
+                <h1>Paiement Stripe réussi !</h1>
+                <p>Merci pour votre achat. Votre abonnement sera activé sous peu.</p>
+                <code>Session Stripe : ${req.query.session_id || '-'} </code>
+            `);
+        });
+        this.app.get('/abo/cancel', (req, res) => {
+            res.send(`
+                <h1>Paiement annulé</h1>
+                <p>Vous n'avez pas finalisé votre achat.</p>
+            `);
+        });
 
         this.app.use((req, res) => {
             res.status(404).json({ success: false, message: 'Route non trouvée' });
@@ -107,6 +123,8 @@ class App {
             res.status(error.status || 500).json({
                 success: false,
                 message: error.message || 'Erreur interne du serveur'
+                
+
             });
         });
     }
@@ -135,9 +153,21 @@ class App {
                 console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
                 console.log(`URL: http://localhost:${this.port}`);
             });
-
-            process.on('SIGINT', this.shutdown.bind(this));
-            process.on('SIGTERM', this.shutdown.bind(this));
+            const { default: SubscriptionService } = await import('./services/SubscriptionService.js');
+            const subService = new SubscriptionService();
+            const runJob = async () => {
+                try {
+                    const result = await subService.processExpiredSubscriptions();
+                    if (result?.processed >= 0) {
+                        console.log(`[SubscriptionsJob] processed=${result.processed} @ ${new Date().toISOString()}`);
+                    }
+                } catch (e) {
+                    console.error('[SubscriptionsJob] error:', e.message);
+                }
+            };
+            runJob();
+            setInterval(runJob, 60 * 60 * 1000);
+           
 
         } catch (error) {
             console.error('Erreur démarrage:', error);
@@ -155,6 +185,8 @@ class App {
             process.exit(1);
         }
     }
+
+
 
     getApp() {
         return this.app;

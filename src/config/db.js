@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 class DatabaseConfig {
     async connect() {
         try {
-            await mongoose.connect('mongodb://127.0.0.1:27017/darna');
+            await mongoose.connect(process.env.MONGODB_URI);
             console.log('MongoDB connected successfully');
         } catch (error) {
             console.error('MongoDB connection error:', error.message);

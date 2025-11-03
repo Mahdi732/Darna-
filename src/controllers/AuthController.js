@@ -1,4 +1,5 @@
 import AuthService from '../services/Auth.service.js';
+import User from '../models/User.js';
 
 class AuthController {
     constructor() {
@@ -196,6 +197,51 @@ class AuthController {
             const userId = req.user?.userId;
             const result = await this.authService.get2FAStatus(userId);
             res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    };
+
+    // Ajouter un membre à une entreprise
+    addMember = async (req, res) => {
+        try {
+            const { companyId, memberUserId } = req.body;
+            const company = await User.findById(companyId);
+            const member = await User.findById(memberUserId);
+            if (!company || company.accountType !== 'entreprise') {
+                return res.status(400).json({ success: false, message: "Société introuvable ou invalide" });
+            }
+            if (!member) {
+                return res.status(400).json({ success: false, message: "Membre introuvable" });
+            }
+            member.parentCompany = company._id;
+            await member.save();
+            if (!company.members.includes(member._id)) {
+                company.members.push(member._id);
+                await company.save();
+            }
+            return res.json({ success: true, message: 'Membre ajouté à la société', member });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    };
+    // Retirer un membre d'une entreprise
+    removeMember = async (req, res) => {
+        try {
+            const { companyId, memberUserId } = req.body;
+            const company = await User.findById(companyId);
+            const member = await User.findById(memberUserId);
+            if (!company || company.accountType !== 'entreprise') {
+                return res.status(400).json({ success: false, message: "Société introuvable ou invalide" });
+            }
+            if (!member) {
+                return res.status(400).json({ success: false, message: "Membre introuvable" });
+            }
+            company.members = company.members.filter(id => id.toString() !== member._id.toString());
+            await company.save();
+            member.parentCompany = null;
+            await member.save();
+            return res.json({ success: true, message: 'Membre retiré de la société', member });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
